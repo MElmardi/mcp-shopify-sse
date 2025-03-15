@@ -1,27 +1,22 @@
-FROM node:22.12-alpine AS builder
-
-COPY . /app
-COPY tsconfig.json /tsconfig.json
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-RUN npm install
+# Copy only package files first to leverage cache
+COPY package*.json ./
+COPY tsconfig.json ./
 
-RUN npm ci --ignore-scripts --omit-dev
+# Install all dependencies (including devDependencies needed for build)
+RUN npm ci
 
-# Add build step to create dist directory
+# Copy source code
+COPY src/ ./src/
+
+# Build the application
 RUN npm run build
 
-FROM node:22-alpine AS release
+# Remove dev dependencies
+RUN npm ci --omit=dev
 
-COPY --from=builder /app/dist /app/dist
-COPY --from=builder /app/package.json /app/package.json
-COPY --from=builder /app/package-lock.json /app/package-lock.json
-
-ENV NODE_ENV=production
-
-WORKDIR /app
-
-RUN npm ci --ignore-scripts --omit-dev
-
-ENTRYPOINT ["node", "dist/index.js"]
+# Run the application
+CMD ["node", "dist/index.js"]
