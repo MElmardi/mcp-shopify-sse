@@ -11,7 +11,9 @@ import { registerOrderTools } from "./tools/orderTools.js";
 import { registerShopTools } from "./tools/shopTools.js";
 import { registerWebhookTools } from "./tools/webhookTools.js";
 import express from "express";
-import 'dotenv/config'
+import { config } from 'dotenv'
+
+config()
 
 
 const server = new McpServer(
