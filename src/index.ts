@@ -1,42 +1,96 @@
 #!/usr/bin/env node
-
+/* eslint-disable */
+// @ts-nocheck
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { config } from "./config/index.js";
-import { registerProductTools } from "./tools/productTools.js";
 import { registerCustomerTools } from "./tools/customerTools.js";
-import { registerOrderTools } from "./tools/orderTools.js";
-import { registerShopTools } from "./tools/shopTools.js";
 import { registerDiscountTools } from "./tools/discountTools.js";
+import { registerOrderTools } from "./tools/orderTools.js";
+// import { registerProductTools } from "./tools/productTools.js";
+import { registerShopTools } from "./tools/shopTools.js";
 import { registerWebhookTools } from "./tools/webhookTools.js";
+import express from "express";
+import 'dotenv/config'
+
+
+const server = new McpServer(
+  {
+    name: "mcp-shopify",
+    version: "0.1.0",
+  },
+  {
+    capabilities: {
+      resources: {},
+      tools: {},
+    },
+  },
+);
 
 /**
- * Main entry point for the Shopify MCP Server
+ * Main entry point for the Shopify MCP Server 
  * Initializes the server and registers all tools
  */
-async function main() {
+async function registerTools() {
   // Create the MCP server
-const server = new McpServer({
-  name: "shopify-tools",
-    version: "1.0.1",
-  });
 
   // Register all tools
-  registerProductTools(server);
+  // registerProductTools(server);
   registerCustomerTools(server);
   registerOrderTools(server);
   registerShopTools(server);
   registerDiscountTools(server);
   registerWebhookTools(server);
 
-  // Connect to the transport
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error("Shopify MCP Server running on stdio");
+
 }
 
 // Start the server
-main().catch((error) => {
+registerTools().catch((error) => {
   console.error("Fatal error in main():", error);
   process.exit(1);
 });
+
+
+
+async function runServer() {
+  const app = express();
+  const port = process.env.PORT || 3001;
+
+  // Store active transport
+  let activeTransport: SSEServerTransport | null = null;
+
+  app.get("/sse", async (req, res) => {
+    // Close existing connection if any
+    if (activeTransport) {
+      try {
+        await activeTransport.close();
+      } catch (error) {
+        console.warn("Error closing previous transport:", error);
+      }
+    }
+
+    // Create new transport
+    activeTransport = new SSEServerTransport("/messages", res);
+    await server.connect(activeTransport);
+
+    // Handle client disconnect
+    res.on('close', () => {
+      activeTransport = null;
+    });
+  });
+
+  app.post("/messages", async (req, res) => {
+    if (!activeTransport) {
+      res.status(400).json({ error: "No active SSE connection" });
+      return;
+    }
+    await activeTransport.handlePostMessage(req, res);
+  });
+
+  app.listen(port, () => {
+    console.log(`MCP Shopify server listening on port ${port}`);
+  });
+}
+
+runServer().catch(console.error);

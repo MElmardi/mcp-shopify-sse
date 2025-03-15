@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 import { ShopifyClientPort, ProductNode, ProductVariant } from "../ShopifyClient/ShopifyClientPort.js";
 
 export async function getProductRecommendations(

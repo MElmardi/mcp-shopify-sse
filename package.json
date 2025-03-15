@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\""
+    "build": "tsc && node -e \"require('fs').chmodSync('dist/index.js', '755')\"",
+    "start": "node dist/index.js"
   },
   "keywords": [],
   "author": "Amir Bengherbi",
@@ -12,10 +13,13 @@
   "description": "MCP Server for Shopify API, enabling interaction with store data through GraphQL API.",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.4.1",
+    "eventsource": "^3.0.5",
+    "express": "^4.21.2",
     "graphql-request": "^7.1.2",
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.10",
     "dotenv": "^16.4.7",
@@ -25,9 +29,9 @@
   },
   "type": "module",
   "files": [
-    "build"
+    "dist"
   ],
   "bin": {
-    "shopify-mcp-server": "./build/index.js"
+    "shopify-mcp-server": "./dist/index.js"
   }
 }

@@ -20,22 +20,19 @@ export interface ShopifyConfig {
  * @throws Error if required environment variables are missing
  */
 export function loadConfig(): ShopifyConfig {
-  const accessToken = process.env.SHOPIFY_ACCESS_TOKEN;
-  if (!accessToken) {
-    throw new Error("SHOPIFY_ACCESS_TOKEN environment variable is required");
-  }
 
-  const shopDomain = process.env.MYSHOPIFY_DOMAIN;
-  if (!shopDomain) {
-    throw new Error("MYSHOPIFY_DOMAIN environment variable is required");
-  }
+  // TODO: remove this function, make this config function optional most of the time the user passes the keys on each tool call
+  const accessToken = process.env.SHOPIFY_ACCESS_TOKEN || '';
+
+  const shopDomain = process.env.MYSHOPIFY_DOMAIN || '';
+
 
   // Allow API version to be configurable via environment variable
   const apiVersion = process.env.SHOPIFY_API_VERSION || DEFAULT_API_VERSION;
 
   return {
-    accessToken,
-    shopDomain,
+    accessToken: '',
+    shopDomain: '',
     apiVersion,
   };
 }

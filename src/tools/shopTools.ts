@@ -1,3 +1,6 @@
+/* eslint-disable */
+// @ts-nocheck
+
 /**
  * Shop and collection related tools for the Shopify MCP Server
  */
@@ -12,6 +15,8 @@ import { handleError, formatSuccess } from "../utils/errorHandler.js";
 interface GetCollectionsInput {
   limit?: number;
   name?: string;
+  accessToken: string;
+  shopDomain: string;
 }
 
 /**
@@ -30,13 +35,15 @@ export function registerShopTools(server: McpServer): void {
         .default(10)
         .describe("Maximum number of collections to return"),
       name: z.string().optional().describe("Filter collections by name"),
+      accessToken: z.string().describe("Shopify access token"),
+      shopDomain: z.string().describe("Shopify shop domain"),
     },
-    async ({ limit, name }: GetCollectionsInput) => {
+    async ({ limit, name, accessToken, shopDomain }: GetCollectionsInput) => {
       const client = new ShopifyClient();
       try {
         const collections = await client.loadCollections(
-          config.accessToken,
-          config.shopDomain,
+          accessToken,
+          shopDomain,
           { limit, name }
         );
         return formatSuccess(collections);
@@ -50,13 +57,16 @@ export function registerShopTools(server: McpServer): void {
   server.tool(
     "get-shop",
     "Get shop details",
-    {},
-    async () => {
+    {
+      accessToken: z.string().describe("Shopify access token"),
+      shopDomain: z.string().describe("Shopify shop domain"),
+    },
+    async ({ accessToken, shopDomain }) => {
       const client = new ShopifyClient();
       try {
         const shop = await client.loadShop(
-          config.accessToken,
-          config.shopDomain
+          accessToken,
+          shopDomain
         );
         return formatSuccess(shop);
       } catch (error) {
@@ -69,13 +79,16 @@ export function registerShopTools(server: McpServer): void {
   server.tool(
     "get-shop-details",
     "Get extended shop details including shipping countries",
-    {},
-    async () => {
+    {
+      accessToken: z.string().describe("Shopify access token"),
+      shopDomain: z.string().describe("Shopify shop domain"),
+    },
+    async ({ accessToken, shopDomain }) => {
       const client = new ShopifyClient();
       try {
         const shopDetails = await client.loadShopDetail(
-          config.accessToken,
-          config.shopDomain
+          accessToken,
+          shopDomain
         );
         return formatSuccess(shopDetails);
       } catch (error) {
@@ -83,4 +96,4 @@ export function registerShopTools(server: McpServer): void {
       }
     }
   );
-} 
+}
