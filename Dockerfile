@@ -9,6 +9,9 @@ RUN npm install
 
 RUN npm ci --ignore-scripts --omit-dev
 
+# Add build step to create dist directory
+RUN npm run build
+
 FROM node:22-alpine AS release
 
 COPY --from=builder /app/dist /app/dist
